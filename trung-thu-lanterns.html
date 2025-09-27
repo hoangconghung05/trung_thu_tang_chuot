@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đèn Trời Trung Thu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #1a1a2e, #16213e, #0f0c29);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Audio controls */
+        .audio-control {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .audio-control button {
+            background: rgba(255, 215, 0, 0.8);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: Arial, sans-serif;
+        }
+
+        .audio-control button:hover {
+            background: rgba(255, 215, 0, 1);
+            transform: scale(1.05);
+        }
+
+        /* Trăng tròn to */
+        .moon {
+            position: absolute;
+            top: 60px;
+            right: 80px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle at 30% 30%, #fff, #ffd700, #ffb347);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px rgba(255, 215, 0, 0.8),
+                0 0 120px rgba(255, 215, 0, 0.4),
+                inset -20px -20px 40px rgba(0, 0, 0, 0.1);
+            animation: moonGlow 4s ease-in-out infinite alternate;
+        }
+
+        /* Các ngôi sao nhỏ */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        .star:nth-child(1) { top: 15%; left: 10%; width: 2px; height: 2px; animation-delay: 0s; }
+        .star:nth-child(2) { top: 20%; left: 80%; width: 3px; height: 3px; animation-delay: 0.5s; }
+        .star:nth-child(3) { top: 35%; left: 75%; width: 2px; height: 2px; animation-delay: 1s; }
+        .star:nth-child(4) { top: 25%; left: 25%; width: 2px; height: 2px; animation-delay: 1.5s; }
+        .star:nth-child(5) { top: 40%; left: 15%; width: 3px; height: 3px; animation-delay: 2s; }
+
+        /* Container cho đèn trời */
+        .sky-lanterns {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Đèn trời bay */
+        .sky-lantern {
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            background: radial-gradient(ellipse at center top, #ff6b35, #ff8e53, #ff6b35);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: floatUp linear infinite;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sky-lantern:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(255, 107, 53, 1);
+        }
+
+        /* Hiệu ứng phát sáng của đèn */
+        .sky-lantern::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 8px;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6), transparent 70%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        }
+
+        /* Tia sáng */
+        .sky-lantern::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.3), transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* Đèn lớn hơn cho một số cái */
+        .sky-lantern.large {
+            width: 35px;
+            height: 45px;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 1);
+        }
+
+        .sky-lantern.large::after {
+            width: 50px;
+            height: 50px;
+        }
+
+        /* Đèn nhỏ */
+        .sky-lantern.small {
+            width: 18px;
+            height: 25px;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.6);
+        }
+
+        .sky-lantern.small::after {
+            width: 25px;
+            height: 25px;
+        }
+
+        /* Animation bay lên */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) translateX(0px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) translateX(var(--drift));
+                opacity: 0;
+            }
+        }
+
+        /* Animation cho trăng */
+        @keyframes moonGlow {
+            0% { 
+                box-shadow: 
+                    0 0 60px rgba(255, 215, 0, 0.6),
+                    0 0 120px rgba(255, 215, 0, 0.3);
+            }
+            100% { 
+                box-shadow: 
+                    0 0 80px rgba(255, 215, 0, 0.9),
+                    0 0 160px rgba(255, 215, 0, 0.5);
+            }
+        }
+
+        /* Animation cho sao */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        /* Text chúc mừng */
+        .greeting {
+            position: absolute;
+            bottom: 80px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            color: #ffd700;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 15px rgba(255, 215, 0, 0.8);
+            animation: textGlow 3s ease-in-out infinite alternate;
+            z-index: 100;
+        }
+
+        .greeting-sub {
+            font-size: 18px;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes textGlow {
+            0% { text-shadow: 2px 2px 15px rgba(255, 215, 0, 0.5); }
+            100% { text-shadow: 2px 2px 25px rgba(255, 215, 0, 1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .moon {
+                width: 120px;
+                height: 120px;
+                top: 40px;
+                right: 40px;
+            }
+            .greeting {
+                font-size: 26px;
+                bottom: 60px;
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Modal cho lời nhắn */
+        .message-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .message-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+            position: relative;
+            animation: modalAppear 0.5s ease-out;
+        }
+
+        .message-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .message-text {
+            color: #ffd700;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .message-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .close-button {
+            background: rgba(255, 215, 0, 0.8);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 215, 0, 1);
+            transform: scale(1.05);
+        }
+
+        @keyframes modalAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Control -->
+    <div class="audio-control">
+        <button onclick="toggleMusic()">🎵 Bật nhạc Trung Thu</button>
+        <audio id="bgMusic" autoplay loop>
+            <source src="Download.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <!-- Trăng và sao -->
+    <div class="moon"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+
+    <!-- Container đèn trời -->
+    <div class="sky-lanterns" id="skyLanterns">
+    </div>
+
+    <!-- Lời chúc -->
+    <div class="greeting">
+        Chúc Mừng Tết Trung Thu
+        <div class="greeting-sub">🏮 Click vào đèn trời để xem lời nhắn 🏮</div>
+    </div>
+
+    <!-- Modal hiển thị lời nhắn -->
+    <div class="message-modal" id="messageModal">
+        <div class="message-content">
+            <div class="message-image" id="messageImage"></div>
+            <div class="message-text" id="messageText"></div>
+            <div class="message-subtext" id="messageSubtext"></div>
+            <button class="close-button" onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let isPlaying = false;
+        let melodyInterval;
+        let ambientInterval;
+
+        // Mảng chứa các lời nhắn và ảnh
+        const messages = [
+            {
+                text: "Chúc bạn Trung Thu vui vẻ!",
+                subtext: "Gia đình sum vầy, hạnh phúc bên nhau dưới ánh trăng rằm",
+                image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='90' fill='%23FFD700'/><circle cx='80' cy='80' r='8' fill='%23000'/><circle cx='120' cy='80' r='8' fill='%23000'/><path d='M 70 120 Q 100 140 130 120' stroke='%23000' stroke-width='3' fill='none'/><text x='100' y='160' text-anchor='middle' font-size='16' fill='%23000'>😊</text></svg>"
+            },
+            {
+                text: "Trăng tròn người tròn!",
+                subtext: "Chúc mọi điều tốt đẹp sẽ đến với bạn và người thân",
+                image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='90' fill='%23FFF'/><circle cx='100' cy='100' r='80' fill='%23FFD700'/><circle cx='70' cy='70' r='5' fill='%23FFA500'/><circle cx='130' cy='60' r='4' fill='%23FFA500'/><circle cx='80' cy='130' r='6' fill='%23FFA500'/><text x='100' y='110' text-anchor='middle' font-size='20' fill='%23000'>月</text></svg>"
+            },
+            {
+                text: "Bánh trung thu ngọt ngào!",
+                subtext: "Ngọt ngào như bánh trung thu, ấm áp như ánh trăng rằm",
+                image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='80' fill='%23DEB887'/><circle cx='100' cy='100' r='70' fill='%23F4A460'/><circle cx='100' cy='100' r='60' fill='%23DEB887' stroke='%23CD853F' stroke-width='3'/><text x='100' y='110' text-anchor='middle' font-size='24' fill='%23654321' font-weight='bold'>月饼</text></svg>"
+            },
+            {
+                text: "Ước nguyện bay cao!",
+                subtext: "Mọi ước nguyện của bạn sẽ bay cao như những chiếc đèn trời",
+                image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><ellipse cx='100' cy='120' rx='40' ry='60' fill='%23FF6B35'/><ellipse cx='100' cy='115' rx='35' ry='50' fill='%23FF8E53'/><rect x='95' y='50' width='10' height='30' fill='%23654321'/><circle cx='100' cy='45' r='8' fill='%23654321'/><path d='M 70 190 L 100 170 L 130 190' stroke='%23FFD700' stroke-width='3' fill='%23FFD700'/></svg>"
+            },
+            {
+                text: "Thỏ ngọc gửi lời chúc!",
+                subtext: "Thỏ ngọc trên cung trăng gửi đến bạn những điều may mắn nhất",
+                image: "chuot.jpg"
+            },
+            {
+                text: "Hoa đăng rực rỡ!",
+                subtext: "Ánh sáng hoa đăng thắp sáng con đường hạnh phúc của bạn",
+                image: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='80' fill='%23FF69B4' opacity='0.3'/><circle cx='100' cy='100' r='60' fill='%23FF1493' opacity='0.5'/><circle cx='100' cy='100' r='40' fill='%23FFB6C1'/><circle cx='100' cy='100' r='20' fill='%23FFD700'/><circle cx='100' cy='100' r='10' fill='%23FFF'/><text x='100' y='180' text-anchor='middle' font-size='14' fill='%23FF69B4'>Hoa Đăng</text></svg>"
+            }
+        ];
+
+        // Hiển thị modal với lời nhắn ngẫu nhiên
+        function showMessage() {
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            
+            document.getElementById('messageText').textContent = randomMessage.text;
+            document.getElementById('messageSubtext').textContent = randomMessage.subtext;
+            document.getElementById('messageImage').style.backgroundImage = `url("${randomMessage.image}")`;
+            
+            document.getElementById('messageModal').style.display = 'flex';
+            
+            // Phát âm thanh chuông
+            if (audioContext && isPlaying) {
+                playBellSound();
+            }
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        // Phát âm thanh chuông khi mở modal
+        function playBellSound() {
+            const bell = audioContext.createOscillator();
+            const bellGain = audioContext.createGain();
+            
+            bell.connect(bellGain);
+            bellGain.connect(audioContext.destination);
+            
+            bell.frequency.setValueAtTime(800, audioContext.currentTime);
+            bell.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+            
+            bellGain.gain.setValueAtTime(0.2, audioContext.currentTime);
+            bellGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+            
+            bell.start();
+            bell.stop(audioContext.currentTime + 1);
+        }
+
+        // Tạo giai điệu nhạc Trung Thu
+        function createTraditionalMelody() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const notes = [
+                { freq: 523.25, duration: 0.6 }, // C5
+                { freq: 587.33, duration: 0.6 }, // D5  
+                { freq: 659.25, duration: 0.6 }, // E5
+                { freq: 698.46, duration: 0.8 }, // F5
+                { freq: 783.99, duration: 0.4 }, // G5
+                { freq: 659.25, duration: 0.6 }, // E5
+                { freq: 587.33, duration: 0.6 }, // D5
+                { freq: 523.25, duration: 1.2 }, // C5
+            ];
+
+            let currentTime = audioContext.currentTime;
+            
+            notes.forEach(note => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(note.freq, currentTime);
+                
+                gainNode.gain.setValueAtTime(0, currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.08, currentTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.05, currentTime + note.duration * 0.8);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration);
+                
+                oscillator.start(currentTime);
+                oscillator.stop(currentTime + note.duration);
+                
+                currentTime += note.duration;
+            });
+            
+            return currentTime - audioContext.currentTime;
+        }
+
+        function createAmbientSound() {
+            if (!audioContext) return;
+
+            const cricket = audioContext.createOscillator();
+            const cricketGain = audioContext.createGain();
+            
+            cricket.connect(cricketGain);
+            cricketGain.connect(audioContext.destination);
+            
+            cricket.frequency.setValueAtTime(3500 + Math.random() * 1500, audioContext.currentTime);
+            cricketGain.gain.setValueAtTime(0.01, audioContext.currentTime);
+            cricketGain.gain.linearRampToValueAtTime(0.03, audioContext.currentTime + 0.1);
+            cricketGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+            
+            cricket.start();
+            cricket.stop(audioContext.currentTime + 0.4);
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            
+            if (!isPlaying) {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                audio.play().catch(() => {
+                    console.log('Sử dụng Web Audio API');
+                });
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                playTraditionalMelodyLoop();
+                playAmbientLoop();
+                
+                isPlaying = true;
+                updateButtonText();
+            } else {
+                audio.pause();
+                if (audioContext) {
+                    audioContext.suspend();
+                }
+                if (melodyInterval) clearInterval(melodyInterval);
+                if (ambientInterval) clearInterval(ambientInterval);
+                isPlaying = false;
+                updateButtonText();
+            }
+        }
+
+        function updateButtonText() {
+            const button = document.querySelector('.audio-control button');
+            button.innerHTML = isPlaying ? '🎵 Đang phát nhạc' : '🎵 Bật nhạc Trung Thu';
+        }
+
+        function playTraditionalMelodyLoop() {
+            if (melodyInterval) clearInterval(melodyInterval);
+            
+            const melodyDuration = createTraditionalMelody();
+            
+            melodyInterval = setInterval(() => {
+                if (isPlaying) {
+                    createTraditionalMelody();
+                }
+            }, (melodyDuration + 4) * 1000);
+        }
+        
+        function playAmbientLoop() {
+            if (ambientInterval) clearInterval(ambientInterval);
+            
+            ambientInterval = setInterval(() => {
+                if (isPlaying && Math.random() > 0.7) {
+                    createAmbientSound();
+                }
+            }, 2000);
+        }
+
+        // Tạo đèn trời bay
+        function createSkyLantern() {
+            const container = document.getElementById('skyLanterns');
+            const lantern = document.createElement('div');
+            
+            // Random size
+            const sizes = ['small', '', 'large'];
+            const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+            lantern.className = `sky-lantern ${randomSize}`;
+            
+            // Thêm event click để hiện modal
+            lantern.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showMessage();
+            });
+            
+            // Random starting position
+            const startX = Math.random() * window.innerWidth;
+            const drift = (Math.random() - 0.5) * 200;
+            
+            lantern.style.left = startX + 'px';
+            lantern.style.setProperty('--drift', drift + 'px');
+            
+            // Random animation duration
+            const duration = 15 + Math.random() * 10;
+            lantern.style.animationDuration = duration + 's';
+            
+            // Random delay
+            const delay = Math.random() * 3;
+            lantern.style.animationDelay = delay + 's';
+            
+            container.appendChild(lantern);
+            
+            // Xóa đèn sau khi animation kết thúc
+            setTimeout(() => {
+                if (lantern.parentNode) {
+                    lantern.parentNode.removeChild(lantern);
+                }
+            }, (duration + delay) * 1000);
+        }
+
+        // Tạo đèn trời liên tục
+        function startLanternShow() {
+            // Tạo đèn mới mỗi 0.8-2 giây
+            setInterval(() => {
+                createSkyLantern();
+            }, 800 + Math.random() * 1200);
+            
+            // Tạo một loạt đèn ngay lập tức để có hiệu ứng đầy đủ
+            for(let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    createSkyLantern();
+                }, i * 300);
+            }
+        }
+
+        // Khởi động
+        document.addEventListener('DOMContentLoaded', function() {
+            startLanternShow();
+            
+            // Pulse button sau 3 giây
+            setTimeout(() => {
+                const button = document.querySelector('.audio-control button');
+                button.style.animation = 'pulse 2s infinite';
+            }, 3000);
+        });
+
+        // Tạo đèn mới khi click vào màn hình
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.audio-control') && !e.target.closest('.message-modal')) {
+                // Tạo 3-5 đèn mới từ vị trí click
+                const numLanterns = 3 + Math.floor(Math.random() * 3);
+                for(let i = 0; i < numLanterns; i++) {
+                    setTimeout(() => {
+                        const container = document.getElementById('skyLanterns');
+                        const lantern = document.createElement('div');
+                        
+                        lantern.className = 'sky-lantern large';
+                        
+                        // Thêm event click cho đèn mới
+                        lantern.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            showMessage();
+                        });
+                        
+                        lantern.style.left = (e.clientX - 17 + (Math.random() - 0.5) * 100) + 'px';
+                        lantern.style.bottom = (window.innerHeight - e.clientY - 35) + 'px';
+                        lantern.style.setProperty('--drift', (Math.random() - 0.5) * 150 + 'px');
+                        lantern.style.animationDuration = (12 + Math.random() * 8) + 's';
+                        
+                        container.appendChild(lantern);
+                        
+                        setTimeout(() => {
+                            if (lantern.parentNode) {
+                                lantern.parentNode.removeChild(lantern);
+                            }
+                        }, 20000);
+                    }, i * 100);
+                }
+            }
+        });
+
+        // Đóng modal khi click outside hoặc phím ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        document.getElementById('messageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
