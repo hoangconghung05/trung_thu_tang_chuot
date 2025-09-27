@@ -404,6 +404,7 @@
         let isPlaying = false;
         let melodyInterval;
         let ambientInterval;
+        let currentMessageIndex = 0; // Thêm biến theo dõi thứ tự
 
         // Mảng chứa các lời nhắn và ảnh
         const messages = [
@@ -434,16 +435,20 @@
             }
         ];
 
-        // Hiển thị modal với lời nhắn ngẫu nhiên
+        // Hiển thị modal với lời nhắn theo thứ tự
         function showMessage() {
-            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            // Lấy lời nhắn theo thứ tự, quay lại đầu khi hết
+            const currentMessage = messages[currentMessageIndex];
             
-            document.getElementById('messageText').textContent = randomMessage.text;
-            document.getElementById('messageSubtext').textContent = randomMessage.subtext;
-            document.getElementById('messageImage').style.backgroundImage = `url("${randomMessage.image}")`;
+            document.getElementById('messageText').textContent = currentMessage.text;
+            document.getElementById('messageSubtext').textContent = currentMessage.subtext;
+            document.getElementById('messageImage').style.backgroundImage = `url("${currentMessage.image}")`;
             
             document.getElementById('messageModal').style.display = 'flex';
             
+            
+             // Tăng index cho lần click tiếp theo
+            currentMessageIndex = (currentMessageIndex + 1) % messages.length;
             // Phát âm thanh chuông
             if (audioContext && isPlaying) {
                 playBellSound();
